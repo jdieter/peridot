@@ -1,0 +1,13 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_test")
+
+go_test(
+    name = "tests_test",
+    srcs = ["sign_test.go"],
+    deps = [
+        "//peridot/proto/v1/keykeeper:pb",
+        "//vendor/github.com/stretchr/testify/assert",
+        "//vendor/github.com/stretchr/testify/mock",
+        "@org_golang_google_grpc//codes",
+        "@org_golang_google_grpc//status",
+    ],
+)
