@@ -46,6 +46,14 @@ service KeykeeperService {
     };
   }
 
+  rpc SignRPM(SignRPMRequest) returns (SignRPMResponse) {
+    option (google.api.http) = {
+      post: "/v1/sign-rpm/{key_name}"
+      body: "rpm"
+    };
+  }
+
+
   rpc SignText(SignTextRequest) returns (SignTextResponse) {
     option (google.api.http) = {
       post: "/v1/sign-text"
@@ -104,6 +112,19 @@ message SignArtifactsTask {
 
 message BatchSignArtifactsTask {
   repeated SignArtifactsTask tasks = 1;
+}
+
+message SignRPMRequest {
+  // The key name to use for signing
+  string key_name = 1;
+
+  // The RPM contents as a binary blob
+  bytes rpm = 2;
+}
+
+message SignRPMResponse {
+  // The signed RPM contents as a binary blob
+  bytes signed_rpm = 1;
 }
 
 message SignTextRequest {
