@@ -412,6 +412,7 @@ func (s *Server) SignRPM(ctx context.Context, req *keykeeperpb.SignRPMRequest) (
 	if err != nil {
 		s.log.Errorf("failed to sign rpm: %v", err)
 		s.log.Errorf("rpm --sign output: %s", string(output))
+		return nil, status.Errorf(codes.Internal, "failed to sign rpm: %s", err)
 	}
 
 	signedRPMContents, err := os.ReadFile(tmpFile.Name())

@@ -32,6 +32,9 @@ package s3
 
 import (
 	"bytes"
+	"io/ioutil"
+	"os"
+
 	"github.com/aws/aws-sdk-go/aws"
 	_ "github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -41,8 +44,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"github.com/go-git/go-billy/v5"
 	"github.com/spf13/viper"
-	"io/ioutil"
-	"os"
 	"peridot.resf.org/peridot/lookaside"
 )
 
