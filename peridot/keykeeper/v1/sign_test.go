@@ -6,7 +6,6 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/go-git/go-billy/v5/osfs"
 	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/mock"
@@ -18,7 +17,6 @@ import (
 	keykeeperpb "peridot.resf.org/peridot/keykeeper/pb"
 	"peridot.resf.org/peridot/keykeeper/v1/store"
 	"peridot.resf.org/peridot/keykeeper/v1/store/awssm"
-	"peridot.resf.org/peridot/lookaside/s3"
 )
 
 type MockDB struct {
@@ -41,12 +39,8 @@ func newTestServer(t *testing.T) *Server {
 	sm, err := awssm.New()
 	require.NoError(t, err)
 
-	storage, err := s3.New(osfs.New("/"))
-	require.NoError(t, err)
-
 	server := &Server{
 		db:           mockDB,
-		storage:      storage,
 		log:          logrus.New(),
 		stores:       map[string]store.Store{"awssm": sm},
 		keys:         &sync.Map{},
