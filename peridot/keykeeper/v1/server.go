@@ -32,16 +32,19 @@ package keykeeperv1
 
 import (
 	"context"
+	"math/rand"
+	"os"
+	"os/exec"
+	"strings"
+	"sync"
+	"time"
+
 	"github.com/go-git/go-billy/v5/osfs"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/sirupsen/logrus"
 	"go.temporal.io/sdk/client"
 	"go.temporal.io/sdk/worker"
 	"google.golang.org/grpc"
-	"io/ioutil"
-	"math/rand"
-	"os"
-	"os/exec"
 	commonpb "peridot.resf.org/common"
 	peridotdb "peridot.resf.org/peridot/db"
 	keykeeperpb "peridot.resf.org/peridot/keykeeper/pb"
@@ -50,9 +53,6 @@ import (
 	"peridot.resf.org/peridot/lookaside"
 	"peridot.resf.org/peridot/lookaside/s3"
 	"peridot.resf.org/utils"
-	"strings"
-	"sync"
-	"time"
 )
 
 const TaskQueue = "keykeeper"
@@ -133,11 +133,11 @@ func (s *Server) Run() {
 	if err != nil {
 		logrus.Fatalf("failed to create /keykeeper/gpg/.gnupg: %v", err)
 	}
-	err = ioutil.WriteFile("/keykeeper/gpg/.gnupg/gpg.conf", []byte("use-agent\npinentry-mode loopback"), 0644)
+	err = os.WriteFile("/keykeeper/gpg/.gnupg/gpg.conf", []byte("use-agent\npinentry-mode loopback"), 0644)
 	if err != nil {
 		logrus.Fatalf("could not create gpg config file: %v", err)
 	}
-	err = ioutil.WriteFile("/keykeeper/gpg/.gnupg/gpg-agent.conf", []byte("allow-loopback-pinentry"), 0644)
+	err = os.WriteFile("/keykeeper/gpg/.gnupg/gpg-agent.conf", []byte("allow-loopback-pinentry"), 0644)
 	if err != nil {
 		logrus.Fatalf("could not create gpg agent config file: %v", err)
 	}
@@ -154,7 +154,7 @@ func (s *Server) Run() {
     %{?_gpg_digest_algo:--digest-algo %{_gpg_digest_algo}} \
     --no-secmem-warning \
     -u "%{_gpg_name}" -sbo %{__signature_filename} %{__plaintext_filename}`
-	err = ioutil.WriteFile("/etc/rpm/macros.gpg", []byte(rpmMacros), 0644)
+	err = os.WriteFile("/etc/rpm/macros.gpg", []byte(rpmMacros), 0644)
 	if err != nil {
 		logrus.Fatalf("could not create rpm macros file: %v", err)
 	}
