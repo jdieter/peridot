@@ -4,7 +4,6 @@ package resf.peridot.keykeeper.v1;
 
 import "peridot/proto/v1/task.proto";
 import "google/api/annotations.proto";
-import "validate/validate.proto";
 
 option go_package = "peridot.resf.org/peridot/keykeeper/pb;keykeeperpb";
 

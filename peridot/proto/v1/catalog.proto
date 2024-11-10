@@ -2,11 +2,7 @@ syntax = "proto3";
 
 package resf.peridot.v1;
 
-import "google/protobuf/wrappers.proto";
-import "google/protobuf/timestamp.proto";
 import "validate/validate.proto";
-import "google/api/annotations.proto";
-import "peridot/proto/v1/task.proto";
 import "peridot/proto/v1/package.proto";
 import "peridot/proto/v1/module.proto";
 
