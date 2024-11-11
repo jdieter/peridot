@@ -1,0 +1,13 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "helphelpers",
+    srcs = ["help.go"],
+    importmap = "peridot.resf.org/vendor/github.com/go-delve/delve/cmd/dlv/cmds/helphelpers",
+    importpath = "github.com/go-delve/delve/cmd/dlv/cmds/helphelpers",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//vendor/github.com/spf13/cobra",
+        "//vendor/github.com/spf13/pflag",
+    ],
+)

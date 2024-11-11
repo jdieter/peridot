@@ -1,0 +1,15 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "fbsdutil",
+    srcs = ["regs.go"],
+    importmap = "peridot.resf.org/vendor/github.com/go-delve/delve/pkg/proc/fbsdutil",
+    importpath = "github.com/go-delve/delve/pkg/proc/fbsdutil",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//vendor/github.com/go-delve/delve/pkg/dwarf/op",
+        "//vendor/github.com/go-delve/delve/pkg/dwarf/regnum",
+        "//vendor/github.com/go-delve/delve/pkg/proc",
+        "//vendor/github.com/go-delve/delve/pkg/proc/amd64util",
+    ],
+)

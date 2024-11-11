@@ -1,0 +1,22 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "sameuser",
+    srcs = [
+        "doc.go",
+        "sameuser.go",
+        "sameuser_linux.go",
+    ],
+    importmap = "peridot.resf.org/vendor/github.com/go-delve/delve/service/internal/sameuser",
+    importpath = "github.com/go-delve/delve/service/internal/sameuser",
+    visibility = ["//vendor/github.com/go-delve/delve/service:__subpackages__"],
+    deps = select({
+        "@io_bazel_rules_go//go/platform:android": [
+            "//vendor/github.com/go-delve/delve/pkg/logflags",
+        ],
+        "@io_bazel_rules_go//go/platform:linux": [
+            "//vendor/github.com/go-delve/delve/pkg/logflags",
+        ],
+        "//conditions:default": [],
+    }),
+)

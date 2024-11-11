@@ -1,0 +1,24 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_binary", "go_library")
+
+go_library(
+    name = "dlv_lib",
+    srcs = [
+        "main.go",
+        "tools.go",
+    ],
+    importmap = "peridot.resf.org/vendor/github.com/go-delve/delve/cmd/dlv",
+    importpath = "github.com/go-delve/delve/cmd/dlv",
+    visibility = ["//visibility:private"],
+    deps = [
+        "//vendor/github.com/go-delve/delve/cmd/dlv/cmds",
+        "//vendor/github.com/go-delve/delve/pkg/version",
+        "//vendor/github.com/sirupsen/logrus",
+        "//vendor/github.com/spf13/cobra/doc",
+    ],
+)
+
+go_binary(
+    name = "dlv",
+    embed = [":dlv_lib"],
+    visibility = ["//visibility:public"],
+)

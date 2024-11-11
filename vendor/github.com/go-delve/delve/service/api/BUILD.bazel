@@ -1,0 +1,20 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "api",
+    srcs = [
+        "command.go",
+        "conversions.go",
+        "prettyprint.go",
+        "shorten_type.go",
+        "types.go",
+    ],
+    importmap = "peridot.resf.org/vendor/github.com/go-delve/delve/service/api",
+    importpath = "github.com/go-delve/delve/service/api",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//vendor/github.com/go-delve/delve/pkg/dwarf/godwarf",
+        "//vendor/github.com/go-delve/delve/pkg/dwarf/op",
+        "//vendor/github.com/go-delve/delve/pkg/proc",
+    ],
+)

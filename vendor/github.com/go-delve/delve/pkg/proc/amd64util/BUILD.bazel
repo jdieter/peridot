@@ -1,0 +1,16 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "amd64util",
+    srcs = [
+        "debugregs.go",
+        "xsave.go",
+        "xsave_amd64.go",
+        "xsave_amd64.s",
+        "xsave_other.go",
+    ],
+    importmap = "peridot.resf.org/vendor/github.com/go-delve/delve/pkg/proc/amd64util",
+    importpath = "github.com/go-delve/delve/pkg/proc/amd64util",
+    visibility = ["//visibility:public"],
+    deps = ["//vendor/github.com/go-delve/delve/pkg/proc"],
+)

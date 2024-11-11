@@ -1,0 +1,9 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "debuginfod",
+    srcs = ["debuginfod.go"],
+    importmap = "peridot.resf.org/vendor/github.com/go-delve/delve/pkg/proc/debuginfod",
+    importpath = "github.com/go-delve/delve/pkg/proc/debuginfod",
+    visibility = ["//visibility:public"],
+)

@@ -1,0 +1,16 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "gobuild",
+    srcs = [
+        "defaultexe.go",
+        "gobuild.go",
+    ],
+    importmap = "peridot.resf.org/vendor/github.com/go-delve/delve/pkg/gobuild",
+    importpath = "github.com/go-delve/delve/pkg/gobuild",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//vendor/github.com/go-delve/delve/pkg/config",
+        "//vendor/github.com/go-delve/delve/pkg/logflags",
+    ],
+)

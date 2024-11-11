@@ -1,0 +1,36 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "link",
+    srcs = [
+        "cgroup.go",
+        "doc.go",
+        "iter.go",
+        "kprobe.go",
+        "kprobe_multi.go",
+        "link.go",
+        "netns.go",
+        "perf_event.go",
+        "program.go",
+        "query.go",
+        "raw_tracepoint.go",
+        "socket_filter.go",
+        "syscalls.go",
+        "tracepoint.go",
+        "tracing.go",
+        "uprobe.go",
+        "xdp.go",
+    ],
+    importmap = "peridot.resf.org/vendor/github.com/cilium/ebpf/link",
+    importpath = "github.com/cilium/ebpf/link",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//vendor/github.com/cilium/ebpf",
+        "//vendor/github.com/cilium/ebpf/asm",
+        "//vendor/github.com/cilium/ebpf/btf",
+        "//vendor/github.com/cilium/ebpf/internal",
+        "//vendor/github.com/cilium/ebpf/internal/sys",
+        "//vendor/github.com/cilium/ebpf/internal/tracefs",
+        "//vendor/github.com/cilium/ebpf/internal/unix",
+    ],
+)

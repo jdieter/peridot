@@ -1,0 +1,25 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "core",
+    srcs = [
+        "core.go",
+        "delve_core.go",
+        "linux_core.go",
+        "windows_amd64_minidump.go",
+    ],
+    importmap = "peridot.resf.org/vendor/github.com/go-delve/delve/pkg/proc/core",
+    importpath = "github.com/go-delve/delve/pkg/proc/core",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//vendor/github.com/go-delve/delve/pkg/dwarf/op",
+        "//vendor/github.com/go-delve/delve/pkg/elfwriter",
+        "//vendor/github.com/go-delve/delve/pkg/logflags",
+        "//vendor/github.com/go-delve/delve/pkg/proc",
+        "//vendor/github.com/go-delve/delve/pkg/proc/amd64util",
+        "//vendor/github.com/go-delve/delve/pkg/proc/core/minidump",
+        "//vendor/github.com/go-delve/delve/pkg/proc/internal/ebpf",
+        "//vendor/github.com/go-delve/delve/pkg/proc/linutil",
+        "//vendor/github.com/go-delve/delve/pkg/proc/winutil",
+    ],
+)

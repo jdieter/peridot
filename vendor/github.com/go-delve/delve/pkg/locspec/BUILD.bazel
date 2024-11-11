@@ -1,0 +1,16 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "locspec",
+    srcs = [
+        "doc.go",
+        "locations.go",
+    ],
+    importmap = "peridot.resf.org/vendor/github.com/go-delve/delve/pkg/locspec",
+    importpath = "github.com/go-delve/delve/pkg/locspec",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//vendor/github.com/go-delve/delve/pkg/proc",
+        "//vendor/github.com/go-delve/delve/service/api",
+    ],
+)

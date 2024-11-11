@@ -1,0 +1,13 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "goversion",
+    srcs = [
+        "compat.go",
+        "go_version.go",
+    ],
+    importmap = "peridot.resf.org/vendor/github.com/go-delve/delve/pkg/goversion",
+    importpath = "github.com/go-delve/delve/pkg/goversion",
+    visibility = ["//visibility:public"],
+    deps = ["//vendor/github.com/go-delve/delve/pkg/logflags"],
+)

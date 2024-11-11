@@ -1,0 +1,24 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "debugger",
+    srcs = [
+        "debugger.go",
+        "debugger_linux.go",
+    ],
+    importmap = "peridot.resf.org/vendor/github.com/go-delve/delve/service/debugger",
+    importpath = "github.com/go-delve/delve/service/debugger",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//vendor/github.com/go-delve/delve/pkg/dwarf/op",
+        "//vendor/github.com/go-delve/delve/pkg/gobuild",
+        "//vendor/github.com/go-delve/delve/pkg/goversion",
+        "//vendor/github.com/go-delve/delve/pkg/locspec",
+        "//vendor/github.com/go-delve/delve/pkg/logflags",
+        "//vendor/github.com/go-delve/delve/pkg/proc",
+        "//vendor/github.com/go-delve/delve/pkg/proc/core",
+        "//vendor/github.com/go-delve/delve/pkg/proc/gdbserial",
+        "//vendor/github.com/go-delve/delve/pkg/proc/native",
+        "//vendor/github.com/go-delve/delve/service/api",
+    ],
+)

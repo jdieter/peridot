@@ -1,0 +1,16 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "reader",
+    srcs = [
+        "reader.go",
+        "variables.go",
+    ],
+    importmap = "peridot.resf.org/vendor/github.com/go-delve/delve/pkg/dwarf/reader",
+    importpath = "github.com/go-delve/delve/pkg/dwarf/reader",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//vendor/github.com/go-delve/delve/pkg/dwarf/godwarf",
+        "//vendor/github.com/go-delve/delve/pkg/dwarf/op",
+    ],
+)

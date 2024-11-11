@@ -1,0 +1,17 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "loclist",
+    srcs = [
+        "dwarf2_loclist.go",
+        "dwarf5_loclist.go",
+    ],
+    importmap = "peridot.resf.org/vendor/github.com/go-delve/delve/pkg/dwarf/loclist",
+    importpath = "github.com/go-delve/delve/pkg/dwarf/loclist",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//vendor/github.com/go-delve/delve/pkg/dwarf",
+        "//vendor/github.com/go-delve/delve/pkg/dwarf/godwarf",
+        "//vendor/github.com/go-delve/delve/pkg/dwarf/leb128",
+    ],
+)

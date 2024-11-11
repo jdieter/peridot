@@ -1,0 +1,20 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "godwarf",
+    srcs = [
+        "addr.go",
+        "buf.go",
+        "fakes.go",
+        "sections.go",
+        "tree.go",
+        "type.go",
+    ],
+    importmap = "peridot.resf.org/vendor/github.com/go-delve/delve/pkg/dwarf/godwarf",
+    importpath = "github.com/go-delve/delve/pkg/dwarf/godwarf",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//vendor/github.com/go-delve/delve/pkg/dwarf",
+        "//vendor/github.com/go-delve/delve/pkg/dwarf/op",
+    ],
+)

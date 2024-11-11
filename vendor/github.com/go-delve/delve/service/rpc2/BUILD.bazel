@@ -1,0 +1,19 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "rpc2",
+    srcs = [
+        "client.go",
+        "server.go",
+    ],
+    importmap = "peridot.resf.org/vendor/github.com/go-delve/delve/service/rpc2",
+    importpath = "github.com/go-delve/delve/service/rpc2",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//vendor/github.com/go-delve/delve/pkg/dwarf/op",
+        "//vendor/github.com/go-delve/delve/pkg/proc",
+        "//vendor/github.com/go-delve/delve/service",
+        "//vendor/github.com/go-delve/delve/service/api",
+        "//vendor/github.com/go-delve/delve/service/debugger",
+    ],
+)

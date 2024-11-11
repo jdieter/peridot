@@ -1,0 +1,19 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "service",
+    srcs = [
+        "client.go",
+        "config.go",
+        "listenerpipe.go",
+        "rpccallback.go",
+        "server.go",
+    ],
+    importmap = "peridot.resf.org/vendor/github.com/go-delve/delve/service",
+    importpath = "github.com/go-delve/delve/service",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//vendor/github.com/go-delve/delve/service/api",
+        "//vendor/github.com/go-delve/delve/service/debugger",
+    ],
+)

@@ -1,0 +1,13 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "minidump",
+    srcs = [
+        "fileflags_string.go",
+        "minidump.go",
+    ],
+    importmap = "peridot.resf.org/vendor/github.com/go-delve/delve/pkg/proc/core/minidump",
+    importpath = "github.com/go-delve/delve/pkg/proc/core/minidump",
+    visibility = ["//visibility:public"],
+    deps = ["//vendor/github.com/go-delve/delve/pkg/proc/winutil"],
+)

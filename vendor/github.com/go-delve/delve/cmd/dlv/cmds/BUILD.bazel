@@ -1,0 +1,27 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "cmds",
+    srcs = ["commands.go"],
+    importmap = "peridot.resf.org/vendor/github.com/go-delve/delve/cmd/dlv/cmds",
+    importpath = "github.com/go-delve/delve/cmd/dlv/cmds",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//vendor/github.com/go-delve/delve/cmd/dlv/cmds/helphelpers",
+        "//vendor/github.com/go-delve/delve/pkg/config",
+        "//vendor/github.com/go-delve/delve/pkg/gobuild",
+        "//vendor/github.com/go-delve/delve/pkg/goversion",
+        "//vendor/github.com/go-delve/delve/pkg/logflags",
+        "//vendor/github.com/go-delve/delve/pkg/proc",
+        "//vendor/github.com/go-delve/delve/pkg/terminal",
+        "//vendor/github.com/go-delve/delve/pkg/version",
+        "//vendor/github.com/go-delve/delve/service",
+        "//vendor/github.com/go-delve/delve/service/api",
+        "//vendor/github.com/go-delve/delve/service/dap",
+        "//vendor/github.com/go-delve/delve/service/debugger",
+        "//vendor/github.com/go-delve/delve/service/rpc2",
+        "//vendor/github.com/go-delve/delve/service/rpccommon",
+        "//vendor/github.com/mattn/go-isatty",
+        "//vendor/github.com/spf13/cobra",
+    ],
+)

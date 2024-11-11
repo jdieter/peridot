@@ -1,0 +1,29 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "dap",
+    srcs = [
+        "command.go",
+        "config.go",
+        "error_ids.go",
+        "handles.go",
+        "server.go",
+        "types.go",
+    ],
+    importmap = "peridot.resf.org/vendor/github.com/go-delve/delve/service/dap",
+    importpath = "github.com/go-delve/delve/service/dap",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//vendor/github.com/go-delve/delve/pkg/config",
+        "//vendor/github.com/go-delve/delve/pkg/gobuild",
+        "//vendor/github.com/go-delve/delve/pkg/goversion",
+        "//vendor/github.com/go-delve/delve/pkg/locspec",
+        "//vendor/github.com/go-delve/delve/pkg/logflags",
+        "//vendor/github.com/go-delve/delve/pkg/proc",
+        "//vendor/github.com/go-delve/delve/service",
+        "//vendor/github.com/go-delve/delve/service/api",
+        "//vendor/github.com/go-delve/delve/service/debugger",
+        "//vendor/github.com/go-delve/delve/service/internal/sameuser",
+        "//vendor/github.com/google/go-dap",
+    ],
+)
