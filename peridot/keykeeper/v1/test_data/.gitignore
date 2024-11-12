@@ -1,3 +1,5 @@
 .#*
 pubring.db.lock
 openpgp-revocs.d/
+.gpg-connect_history
+sshcontrol
