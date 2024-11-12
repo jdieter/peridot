@@ -9,6 +9,9 @@
 > The key(s) in this directory should never be used for any serious purpose. They exist to test and verify signatures of
 > various types.
 
+The passphrase for the encrypted key is "the same as the UUID in the KeysDB map. This is how KeyKeeper encrypts keys it
+imports.
+
 ## Changing GPG data
 
 Make sure you run `gpgconf --kill all` before committing anything if you open or change the .gnupg data.
