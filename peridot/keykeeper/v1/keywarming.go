@@ -36,7 +36,6 @@ import (
 	"crypto/cipher"
 	"encoding/hex"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"strings"
@@ -63,13 +62,16 @@ func logCmdRun(cmd *exec.Cmd) (*bytes.Buffer, error) {
 	return &outBuf, cmd.Run()
 }
 
-func gpgCmdEnv(cmd *exec.Cmd) *exec.Cmd {
-	cmd.Env = append(cmd.Env, "GNUPGHOME=/keykeeper/gpg")
+func (s *Server) gpgCmdEnv(cmd *exec.Cmd) *exec.Cmd {
+	if s.workingDir != "" {
+		cmd.Env = append(cmd.Env, "HOME="+s.workingDir)
+	}
+	cmd.Env = append(cmd.Env, fmt.Sprintf("GNUPGHOME=%s/keykeeper/gpg", s.workingDir))
 	return cmd
 }
 
 func (s *Server) importGpgKey(armoredKey string) error {
-	cmd := gpgCmdEnv(exec.Command("gpg", "--batch", "--yes", "--import", "-"))
+	cmd := s.gpgCmdEnv(exec.Command("gpg", "--batch", "--yes", "--import", "-"))
 	cmd.Stdin = strings.NewReader(armoredKey)
 	out, err := logCmdRun(cmd)
 	if err != nil {
@@ -79,7 +81,7 @@ func (s *Server) importGpgKey(armoredKey string) error {
 }
 
 func (s *Server) importRpmKey(publicKey string) error {
-	tmpFile, err := ioutil.TempFile("/tmp", "peridot-key-")
+	tmpFile, err := os.CreateTemp(s.workingDir+"/tmp", "peridot-key-")
 	if err != nil {
 		return err
 	}
@@ -88,7 +90,7 @@ func (s *Server) importRpmKey(publicKey string) error {
 	if err != nil {
 		return err
 	}
-	cmd := gpgCmdEnv(exec.Command("rpm", "--import", tmpFile.Name()))
+	cmd := s.gpgCmdEnv(exec.Command("rpm", "--import", tmpFile.Name()))
 	out, err := logCmdRun(cmd)
 	if err != nil {
 		s.log.Errorf("failed to import rpm key: %s", out.String())
