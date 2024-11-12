@@ -63,24 +63,24 @@ var (
 	ErrUnsupportedExtension = errors.New("unsupported extension")
 )
 
-func checksigRPM(keyName string, key *LoadedKey, rpmPath string) ([]byte, error) {
+func (s *Server) checksigRPM(key *LoadedKey, rpmPath string) ([]byte, error) {
 	opts := []string{
-		"--define", "_gpg_name " + keyName,
+		"--define", "_gpg_name " + key.gpgId,
 		"--define", "_peridot_keykeeper_key " + key.keyUuid.String(),
 		"--checksig", rpmPath,
 	}
-	cmd := gpgCmdEnv(exec.Command("rpm", opts...))
+	cmd := s.gpgCmdEnv(exec.Command("rpm", opts...))
 	out, err := cmd.CombinedOutput()
 	return out, err
 }
 
-func signRPM(keyName string, key *LoadedKey, rpmPath string) ([]byte, error) {
+func (s *Server) signRPM(key *LoadedKey, rpmPath string) ([]byte, error) {
 	opts := []string{
-		"--define", "_gpg_name " + keyName,
+		"--define", "_gpg_name " + key.gpgId,
 		"--define", "_peridot_keykeeper_key " + key.keyUuid.String(),
 		"--addsign", rpmPath,
 	}
-	cmd := gpgCmdEnv(exec.Command("rpm", opts...))
+	cmd := s.gpgCmdEnv(exec.Command("rpm", opts...))
 	out, err := cmd.CombinedOutput()
 	return out, err
 }
@@ -152,9 +152,7 @@ func (s *Server) SignArtifactsWorkflow(ctx workflow.Context, artifacts models.Ta
 			s.log.Errorf("could not get sign artifact: %v", err)
 			return nil, err
 		}
-		if signedArtifact != nil {
-			taskResponse.SignedArtifacts = append(taskResponse.SignedArtifacts, signedArtifact)
-		}
+		taskResponse.SignedArtifacts = append(taskResponse.SignedArtifacts, signedArtifact)
 	}
 
 	task.Status = peridotpb.TaskStatus_TASK_STATUS_SUCCEEDED
@@ -176,7 +174,7 @@ func (s *Server) SignArtifactActivity(ctx context.Context, artifactId string, ke
 		return nil, status.Errorf(codes.Internal, "could not get artifact")
 	}
 
-	key, err := s.EnsureGPGKey(keyName)
+	key, err := s.keykeeperServer.EnsureGPGKey(keyName)
 	if err != nil {
 		s.log.Errorf("failed to load key %s: %v", keyName, err)
 		return nil, status.Error(codes.Internal, "failed to load key")
@@ -196,7 +194,7 @@ func (s *Server) SignArtifactActivity(ctx context.Context, artifactId string, ke
 	}
 
 	ranUuid := uuid.New()
-	localPath := fmt.Sprintf("/keykeeper/artifacts/%s-%s", ranUuid.String(), filepath.Base(artifact.Name))
+	localPath := fmt.Sprintf(s.workingDir+"/keykeeper/artifacts/%s-%s", ranUuid.String(), filepath.Base(artifact.Name))
 	err = s.storage.DownloadObject(artifact.Name, localPath)
 	if err != nil {
 		s.log.Errorf("failed to download artifact %s: %v", artifact.Name, err)
@@ -217,7 +215,7 @@ func (s *Server) SignArtifactActivity(ctx context.Context, artifactId string, ke
 		tx := s.db.UseTransaction(beginTx)
 
 		rpmSign := func() (*keykeeperpb.SignedArtifact, error) {
-			output, err := signRPM(keyName, key, localPath)
+			output, err := s.signRPM(key, localPath)
 			if err != nil {
 				s.log.Errorf("failed to sign artifact %s: %v", artifact.Name, err)
 				statusErr := status.New(codes.Internal, "failed to sign artifact")
@@ -271,7 +269,7 @@ func (s *Server) SignArtifactActivity(ctx context.Context, artifactId string, ke
 			}, nil
 		}
 		verifySig := func() error {
-			output, err := checksigRPM(keyName, key, localPath)
+			output, err := s.checksigRPM(key, localPath)
 			if err != nil {
 				s.log.Errorf("failed to verify artifact %s: %v", artifact.Name, err)
 				s.log.Errorf("buf: %s", string(output))
@@ -388,7 +386,7 @@ func (s *Server) SignArtifacts(_ context.Context, req *keykeeperpb.SignArtifacts
 }
 
 func (s *Server) SignRPM(ctx context.Context, req *keykeeperpb.SignRPMRequest) (*keykeeperpb.SignRPMResponse, error) {
-	key, err := s.EnsureGPGKey(req.KeyName)
+	key, err := s.keykeeperServer.EnsureGPGKey(req.KeyName)
 	if err != nil {
 		s.log.Errorf("failed to load key %s: %v", req.KeyName, err)
 		return nil, status.Error(codes.Internal, "failed to load key")
@@ -408,7 +406,7 @@ func (s *Server) SignRPM(ctx context.Context, req *keykeeperpb.SignRPMRequest) (
 	}
 
 	// Perform the signing operation
-	output, err := signRPM(req.KeyName, key, tmpFile.Name())
+	output, err := s.signRPM(key, tmpFile.Name())
 	if err != nil {
 		s.log.Errorf("failed to sign rpm: %v", err)
 		s.log.Errorf("rpm --sign output: %s", string(output))
@@ -430,7 +428,7 @@ func (s *Server) SignRPM(ctx context.Context, req *keykeeperpb.SignRPMRequest) (
 // SignText signs given text with the given key.
 // This method only returns the signature part of the gpg clearsign
 func (s *Server) SignText(_ context.Context, req *keykeeperpb.SignTextRequest) (*keykeeperpb.SignTextResponse, error) {
-	key, err := s.EnsureGPGKey(req.KeyName)
+	key, err := s.keykeeperServer.EnsureGPGKey(req.KeyName)
 	if err != nil {
 		s.log.Errorf("failed to load key %s: %v", req.KeyName, err)
 		return nil, status.Error(codes.Internal, "failed to load key")
@@ -459,12 +457,12 @@ func (s *Server) SignText(_ context.Context, req *keykeeperpb.SignTextRequest) (
 		"--passphrase",
 		key.keyUuid.String(),
 		"-u",
-		req.KeyName,
+		key.gpgId,
 		"-o",
 		tmpFile.Name() + ".asc",
 		tmpFile.Name(),
 	}
-	cmd := gpgCmdEnv(exec.Command("gpg", cmdArgs...))
+	cmd := s.gpgCmdEnv(exec.Command("gpg", cmdArgs...))
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	err = cmd.Run()
