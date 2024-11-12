@@ -57,17 +57,24 @@ import (
 
 const TaskQueue = "keykeeper"
 
+type KeyKeeperServerType interface {
+	// TODO: Add more methods as we test them
+	EnsureGPGKey(key string) (*LoadedKey, error)
+}
+
 type Server struct {
 	keykeeperpb.UnimplementedKeykeeperServiceServer
 
-	log          *logrus.Logger
-	db           peridotdb.Access
-	storage      lookaside.Storage
-	worker       worker.Worker
-	temporal     client.Client
-	stores       map[string]store.Store
-	keys         *sync.Map
-	defaultStore string
+	log             *logrus.Logger
+	db              peridotdb.Access
+	storage         lookaside.Storage
+	worker          worker.Worker
+	temporal        client.Client
+	stores          map[string]store.Store
+	keys            *sync.Map
+	defaultStore    string
+	workingDir      string
+	keykeeperServer KeyKeeperServerType
 }
 
 func NewServer(db peridotdb.Access, c client.Client) (*Server, error) {
@@ -81,7 +88,7 @@ func NewServer(db peridotdb.Access, c client.Client) (*Server, error) {
 		return nil, err
 	}
 
-	return &Server{
+	s := &Server{
 		log:     logrus.New(),
 		db:      db,
 		storage: storage,
@@ -92,7 +99,11 @@ func NewServer(db peridotdb.Access, c client.Client) (*Server, error) {
 		stores:       map[string]store.Store{"awssm": sm},
 		keys:         &sync.Map{},
 		defaultStore: "awssm",
-	}, nil
+		workingDir:   "",
+	}
+	s.keykeeperServer = s
+
+	return s, nil
 }
 
 func (s *Server) interceptor(ctx context.Context, req interface{}, usi *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
@@ -108,8 +119,7 @@ func (s *Server) Run() {
 	timeout := 5 * time.Minute
 	runtime.DefaultContextTimeout = timeout
 
-	// Seed the random number generator
-	rand.Seed(time.Now().UnixNano())
+	rand.New(rand.NewSource(time.Now().UnixNano()))
 
 	// Register Temporal worker
 	s.worker.RegisterWorkflow(s.SignArtifactsWorkflow)
@@ -117,11 +127,11 @@ func (s *Server) Run() {
 	defer s.temporal.Close()
 
 	// Create keykeeper directories (/keykeeper/gpg and /keykeeper/artifacts)
-	err := os.MkdirAll("/keykeeper/artifacts", 0755)
+	err := os.MkdirAll(s.workingDir+"/keykeeper/artifacts", 0755)
 	if err != nil {
 		s.log.Errorf("Failed to create keykeeper artifacts directory: %v", err)
 	}
-	err = os.MkdirAll("/keykeeper/gpg", 0755)
+	err = os.MkdirAll(s.workingDir+"/keykeeper/gpg", 0755)
 	if err != nil {
 		s.log.Errorf("Failed to create keykeeper gpg directory: %v", err)
 	}
@@ -129,20 +139,20 @@ func (s *Server) Run() {
 	// Since we launch each server in a container, we're going to overwrite
 	// some GPG options on each launch
 	// todo(mustafa): Evaluate if this is the best way to do this (even though non-container workloads will never be supported)
-	err = os.MkdirAll("/keykeeper/gpg/.gnupg", 0755)
+	err = os.MkdirAll(s.workingDir+"/keykeeper/gpg/.gnupg", 0755)
 	if err != nil {
 		logrus.Fatalf("failed to create /keykeeper/gpg/.gnupg: %v", err)
 	}
-	err = os.WriteFile("/keykeeper/gpg/.gnupg/gpg.conf", []byte("use-agent\npinentry-mode loopback"), 0644)
+	err = os.WriteFile(s.workingDir+"/keykeeper/gpg/.gnupg/gpg.conf", []byte("use-agent\npinentry-mode loopback"), 0644)
 	if err != nil {
 		logrus.Fatalf("could not create gpg config file: %v", err)
 	}
-	err = os.WriteFile("/keykeeper/gpg/.gnupg/gpg-agent.conf", []byte("allow-loopback-pinentry"), 0644)
+	err = os.WriteFile(s.workingDir+"/keykeeper/gpg/.gnupg/gpg-agent.conf", []byte("allow-loopback-pinentry"), 0644)
 	if err != nil {
 		logrus.Fatalf("could not create gpg agent config file: %v", err)
 	}
 	// Reload gpg-connect-agent
-	agentReloadCmd := gpgCmdEnv(exec.Command("gpg-connect-agent"))
+	agentReloadCmd := s.gpgCmdEnv(exec.Command("gpg-connect-agent"))
 	agentReloadCmd.Stdin = strings.NewReader("RELOADAGENT\n")
 	logs, err := logCmdRun(agentReloadCmd)
 	if err != nil {
@@ -154,7 +164,7 @@ func (s *Server) Run() {
     %{?_gpg_digest_algo:--digest-algo %{_gpg_digest_algo}} \
     --no-secmem-warning \
     -u "%{_gpg_name}" -sbo %{__signature_filename} %{__plaintext_filename}`
-	err = os.WriteFile("/etc/rpm/macros.gpg", []byte(rpmMacros), 0644)
+	err = os.WriteFile("s.workingDir+/etc/rpm/macros.gpg", []byte(rpmMacros), 0644)
 	if err != nil {
 		logrus.Fatalf("could not create rpm macros file: %v", err)
 	}
