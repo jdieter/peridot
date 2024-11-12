@@ -216,13 +216,16 @@ func TestServer_SignRPM(t *testing.T) {
 		t.Run(fmt.Sprintf("TestServer_SignRPM sign %s with %s", filepath.Base(file), name), runme)
 	}
 
+	keys := []string{"clear-key", "encrypted-key"}
 	rpms := []string{
 		"test_data/signme-c7.rpm",
 		"test_data/signme-r8.rpm",
 		"test_data/signme-r9.rpm",
 	}
-	for _, rpm := range rpms {
-		tester("clear-key", rpm)
+	for _, key := range keys {
+		for _, rpm := range rpms {
+			tester(key, rpm)
+		}
 	}
 
 	t.Run("TestServer_SignRPM_KeyNotFound", func(t *testing.T) {
