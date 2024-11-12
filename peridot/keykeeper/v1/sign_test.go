@@ -3,7 +3,6 @@ package keykeeperv1
 import (
 	"context"
 	"fmt"
-	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -38,11 +37,15 @@ var KeyDB = map[string]map[string]string{
 		"ID":    "ecfdb268-9d24-4d62-94d3-29ac071074de",
 		"Name":  "clear-key",
 		"GPGID": "C292F1309ECC2D8D47E38D7DD975447E3215114A",
+        "PrivateKeyFile": "test_data/kk-sign-clear.key",
+        "PublicKeyFile": "test_data/kk-sign-clear.pub",
 	},
 	"encrypted-key": {
 		"ID":    "d0148b46-253c-4053-8ef2-af1a7966ac81",
 		"Name":  "encrypted-key",
 		"GPGID": "CC1CD8BECFC3E3A32FC7C5877E56BAF2C24C581C",
+        "PrivateKeyFile": "test_data/kk-sign-encrypted.key",
+        "PublicKeyFile": "test_data/kk-sign-encrypted.pub",
 	},
 }
 
@@ -95,48 +98,50 @@ func newTestServer(t *testing.T) *FakeServer {
 	return server
 }
 
-func copyDir(src string, dst string) error {
-	cwd, _ := os.Getwd()
-	fmt.Println("Current working directory: ", cwd)
+func (s *FakeServer) setupGnuPG(dst string) error {
+    // Set up the GnuPG directory
+	err := os.MkdirAll(s.workingDir+"/keykeeper/gpg/.gnupg", 0755)
+	if err != nil {
+		logrus.Fatalf("failed to create /keykeeper/gpg/.gnupg: %v", err)
+	}
+	err = os.WriteFile(s.workingDir+"/keykeeper/gpg/.gnupg/gpg.conf", []byte("use-agent\npinentry-mode loopback"), 0644)
+	if err != nil {
+		logrus.Fatalf("could not create gpg config file: %v", err)
+	}
+	err = os.WriteFile(s.workingDir+"/keykeeper/gpg/.gnupg/gpg-agent.conf", []byte("allow-loopback-pinentry"), 0644)
+	if err != nil {
+		logrus.Fatalf("could not create gpg agent config file: %v", err)
+	}
+	// Reload gpg-connect-agent
+	agentReloadCmd := s.gpgCmdEnv(exec.Command("gpg-connect-agent"))
+	agentReloadCmd.Stdin = strings.NewReader("RELOADAGENT\n")
+	logs, err := logCmdRun(agentReloadCmd)
+	if err != nil {
+		logrus.Fatalf("could not reload gpg-connect-agent: %v\nlogs: %s", err, logs)
+	}
 
-	return filepath.Walk(src, func(path string, info os.FileInfo, err error) error {
-		if err != nil {
-			return err
-		}
-		relPath, err := filepath.Rel(src, path)
-		if err != nil {
-			return err
-		}
-		dstPath := filepath.Join(dst, relPath)
-		if info.IsDir() {
-			return os.MkdirAll(dstPath, info.Mode())
-		}
-		if strings.HasPrefix(info.Name(), ".#") || strings.HasSuffix(info.Name(), ".lock") {
-			return nil
-		}
-		dstFile, err := os.OpenFile(dstPath, os.O_CREATE|os.O_WRONLY, info.Mode())
-		if err != nil {
-			return err
-		}
-		defer dstFile.Close()
-		srcFile, err := os.Open(path)
-		if err != nil {
-			return err
-		}
-		defer srcFile.Close()
-		_, err = io.Copy(dstFile, srcFile)
-		return err
-	})
+
+    for _, keyData := range KeyDB {
+        cmd := s.gpgCmdEnv(exec.Command("gpg", "--import", "--batch", "--no-tty", keyData["PrivateKeyFile"]))
+        out, err := cmd.CombinedOutput()
+        if err != nil {
+            s.log.Errorf("failed to import gpg key: %s", string(out))
+            return err
+        }
+    }
+    return nil
 }
 
 func (s *FakeServer) SetUp(t *testing.T) {
-	srcDir := "test_data/.gnupg"
 	destDir := fmt.Sprintf("%s/keykeeper/gpg", s.workingDir)
 
 	err := os.MkdirAll(destDir, 0700)
 	require.NoError(t, err)
 
-	err = copyDir(srcDir, destDir)
+	err = s.setupGnuPG(destDir)
+    t.Cleanup(func() {
+        exec.Command("gpgconf", "--kill", "all").Run()
+    })
 	require.NoError(t, err)
 
 	rpmmacrosContent := `%__gpg_sign_cmd %{__gpg} \
