@@ -1,0 +1,24 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "grpc-gateway-file",
+    srcs = [
+        "errors.go",
+        "file.go",
+        "marshaler.go",
+        "server.go",
+        "upload.go",
+        "util.go",
+    ],
+    importmap = "peridot.resf.org/vendor/github.com/black-06/grpc-gateway-file",
+    importpath = "github.com/black-06/grpc-gateway-file",
+    visibility = ["//visibility:public"],
+    deps = [
+        "@com_github_grpc_ecosystem_grpc_gateway_v2//runtime:go_default_library",
+        "@org_golang_google_genproto_googleapis_api//httpbody",
+        "@org_golang_google_grpc//:grpc",
+        "@org_golang_google_grpc//metadata",
+        "@org_golang_google_protobuf//encoding/protojson",
+        "@org_golang_google_protobuf//proto",
+    ],
+)

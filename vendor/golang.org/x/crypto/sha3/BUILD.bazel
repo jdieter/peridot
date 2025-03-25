@@ -14,7 +14,6 @@ go_library(
         "sha3_s390x.s",
         "shake.go",
         "shake_noasm.go",
-        "xor.go",
     ],
     importmap = "peridot.resf.org/vendor/golang.org/x/crypto/sha3",
     importpath = "golang.org/x/crypto/sha3",

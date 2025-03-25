@@ -43,10 +43,10 @@ go_library(
 
 go_test(
     name = "keykeeper_test",
+    size = "small",
     srcs = ["sign_test.go"],
     data = glob(["test_data/**"]),
     embed = [":keykeeper"],
-    size = "small",
     deps = [
         "//peridot/db",
         "//peridot/db/models",
