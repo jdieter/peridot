@@ -44,5 +44,4 @@ RUN chown peridotbuilder:mock /etc/yum.conf && chown -R peridotbuilder:mock /etc
 RUN mkdir -p /bundle
 COPY bazel-build/keykeeper /bundle/keykeeper
 RUN chmod 0755 /bundle/keykeeper
-USER peridotbuilder
 ENTRYPOINT ["/tini", "--"]

@@ -164,7 +164,7 @@ func (s *Server) Run() {
     %{?_gpg_digest_algo:--digest-algo %{_gpg_digest_algo}} \
     --no-secmem-warning \
     -u "%{_gpg_name}" -sbo %{__signature_filename} %{__plaintext_filename}`
-	err = os.WriteFile("s.workingDir+/etc/rpm/macros.gpg", []byte(rpmMacros), 0644)
+	err = os.WriteFile(s.workingDir+"/etc/rpm/macros.gpg", []byte(rpmMacros), 0644)
 	if err != nil {
 		logrus.Fatalf("could not create rpm macros file: %v", err)
 	}
