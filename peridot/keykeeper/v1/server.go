@@ -113,10 +113,11 @@ func (s *Server) interceptor(ctx context.Context, req interface{}, usi *grpc.Una
 }
 
 func (s *Server) Run() {
-	// Set timeout to 5 minutes
+	// Set timeout to 2 hours to ensure SignRPM doesn't fail
+	// todo: Figure out if we can set a per-endpoint timeout
 	// This is used for key generation
 	// todo(mustafa): Evaluate if we should move key generation to Temporal
-	timeout := 5 * time.Minute
+	timeout := 2 * time.Hour
 	runtime.DefaultContextTimeout = timeout
 
 	rand.New(rand.NewSource(time.Now().UnixNano()))

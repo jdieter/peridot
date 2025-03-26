@@ -49,6 +49,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"google.golang.org/grpc"
+	gatewayfile "github.com/black-06/grpc-gateway-file"
 
 	_ "github.com/lib/pq"
 )
@@ -210,6 +211,12 @@ func NewGRPCServer(goptions *GRPCOptions, endpoint func(*Register), serve func(*
 	// combine options (default and additional)
 	var muxOptions []runtime.ServeMuxOption
 	muxOptions = append(muxOptions, DefaultServeMuxOption()...)
+	muxOptions = append(
+		muxOptions,
+		gatewayfile.WithFileIncomingHeaderMatcher(),
+		gatewayfile.WithFileForwardResponseOption(),
+		gatewayfile.WithHTTPBodyMarshaler(),
+	)
 	if options.MuxOptions != nil {
 		muxOptions = append(muxOptions, options.MuxOptions...)
 	}

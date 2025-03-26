@@ -9,6 +9,7 @@ proto_library(
     deps = [
         "//peridot/proto/v1:peridotpb_proto",
         "@googleapis//google/api:annotations_proto",
+        "@googleapis//google/api:httpbody_proto",
     ],
 )
 
@@ -26,6 +27,7 @@ go_proto_library(
     deps = [
         "//peridot/proto/v1:pb",
         "@org_golang_google_genproto_googleapis_api//annotations",
+        "@org_golang_google_genproto_googleapis_api//httpbody",
     ],
 )
 

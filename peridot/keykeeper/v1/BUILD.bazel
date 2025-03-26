@@ -22,6 +22,7 @@ go_library(
         "//peridot/proto/v1/keykeeper:pb",
         "//proto:common",
         "//utils",
+        "//vendor/github.com/black-06/grpc-gateway-file",
         "//vendor/github.com/ProtonMail/gopenpgp/v2/crypto",
         "//vendor/github.com/ProtonMail/gopenpgp/v2/helper",
         "//vendor/github.com/go-git/go-billy/v5/osfs",

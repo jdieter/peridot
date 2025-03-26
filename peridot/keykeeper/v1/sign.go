@@ -44,6 +44,7 @@ import (
 	"strings"
 	"time"
 
+	gatewayfile "github.com/black-06/grpc-gateway-file"
 	"github.com/google/uuid"
 	"go.temporal.io/sdk/activity"
 	"go.temporal.io/sdk/client"
@@ -385,44 +386,58 @@ func (s *Server) SignArtifacts(_ context.Context, req *keykeeperpb.SignArtifacts
 	}, nil
 }
 
-func (s *Server) SignRPM(ctx context.Context, req *keykeeperpb.SignRPMRequest) (*keykeeperpb.SignRPMResponse, error) {
-	key, err := s.keykeeperServer.EnsureGPGKey(req.KeyName)
+const maxDataSize = 1024 * 1024 * 1024 * 10 // 10GB
+
+// SignRPM signs the given rpm and returns it.  Unlike the other endpoints
+// this endpoint expects a multipart input and returns an octet-stream
+func (s *Server) SignRPM(server keykeeperpb.KeykeeperService_SignRPMServer) error {
+	formData, err := gatewayfile.NewFormData(server, maxDataSize)
 	if err != nil {
-		s.log.Errorf("failed to load key %s: %v", req.KeyName, err)
-		return nil, status.Error(codes.Internal, "failed to load key")
+		if errors.Is(err, gatewayfile.ErrSizeLimitExceeded) {
+			return status.Errorf(codes.InvalidArgument, "size limit exceeded")
+		}
+
+		return status.Errorf(codes.Internal, err.Error())
 	}
 
-	tmpFile, err := os.CreateTemp("", "kkp-sign-*.rpm")
-	if err != nil {
-		s.log.Errorf("failed to create temp file: %v", err)
-		return nil, status.Error(codes.Internal, "failed to create temp file")
+	keyName := formData.FirstValue("keyName")
+	if keyName == "" {
+		return status.Errorf(codes.InvalidArgument, "missing value for key keyName")
 	}
-	defer os.Remove(tmpFile.Name())
-	defer tmpFile.Close()
-	err = os.WriteFile(tmpFile.Name(), []byte(req.Rpm), 0644)
+	key, err := s.keykeeperServer.EnsureGPGKey(keyName)
 	if err != nil {
-		s.log.Errorf("failed to write to temp file: %v", err)
-		return nil, status.Error(codes.Internal, "failed to write to temp file")
+		s.log.Errorf("failed to load key %s: %v", keyName, err)
+		return status.Error(codes.Internal, "failed to load key")
 	}
+	fileHeader := formData.FirstFile("rpm")
+	if fileHeader == nil {
+		return status.Errorf(codes.InvalidArgument, "missing file for key rpm")
+	}
+
+	tmpDir, err := os.MkdirTemp("/var/tmp", "kkp-sign-")
+	if err != nil {
+		s.log.Errorf("failed to create temp directory: %v", err)
+		return status.Error(codes.Internal, "failed to create temp directory")
+	}
+	defer os.RemoveAll(tmpDir)
+
+	tmpFile := tmpDir + "/package.rpm"
+	err = gatewayfile.SaveMultipartFile(fileHeader, tmpFile)
+	if err != nil {
+		s.log.Errorf("failed to write temporary uploaded file: %v", err)
+		return status.Error(codes.Internal, "failed to write temporary uploaded file")
+	}
+	formData.RemoveAll()
 
 	// Perform the signing operation
-	output, err := s.signRPM(key, tmpFile.Name())
+	output, err := s.signRPM(key, tmpFile)
 	if err != nil {
 		s.log.Errorf("failed to sign rpm: %v", err)
 		s.log.Errorf("rpm --sign output: %s", string(output))
-		return nil, status.Errorf(codes.Internal, "failed to sign rpm: %s", err)
+		return status.Errorf(codes.Internal, "failed to sign rpm: %s", err)
 	}
 
-	signedRPMContents, err := os.ReadFile(tmpFile.Name())
-	if err != nil {
-		s.log.Errorf("failed to sign text: %v", err)
-		return nil, status.Error(codes.Internal, "failed to sign text")
-	}
-
-	// Return the signed RPM contents
-	return &keykeeperpb.SignRPMResponse{
-		SignedRpm: signedRPMContents,
-	}, nil
+	return gatewayfile.ServeFile(server, "application/octet-stream", tmpFile)
 }
 
 // SignText signs given text with the given key.

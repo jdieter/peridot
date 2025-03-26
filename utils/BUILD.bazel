@@ -24,6 +24,7 @@ go_library(
         "//vendor/github.com/aws/aws-sdk-go/aws",
         "//vendor/github.com/aws/aws-sdk-go/aws/credentials",
         "//vendor/github.com/aws/aws-sdk-go/aws/session",
+        "//vendor/github.com/black-06/grpc-gateway-file",
         "//vendor/github.com/fatih/color",
         "//vendor/github.com/go-chi/chi",
         "//vendor/github.com/go-chi/chi/middleware",
